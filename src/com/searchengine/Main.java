@@ -16,10 +16,13 @@ public class Main {
         String sourceFilePath = "ressources/frwiki-20230301-pages-articles.xml";
         String sourceFilePathShort = "ressources/frwiki10000.xml";
         String corpusPath = "ressources/corpus.xml";
+        String corpusPats = "ressources/corpus.xml";
 
 //        BuildCorpus b = new BuildCorpus(sourceFilePath, corpusPath);
 //        b.buildCorpus();
 
-        BuildCorpus.calculatePageNumber(corpusPath);
+//        BuildCorpus.calculatePageNumber(corpusPath);
+
+
     }
 }
