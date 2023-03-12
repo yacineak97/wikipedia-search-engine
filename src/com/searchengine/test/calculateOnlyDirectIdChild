@@ -1,0 +1,21 @@
+while (reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    if (startElement.getName().getLocalPart().equals("revision")) {
+                        insideRevision = true;
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("page") && !insideRevision) {
+                        i += 1;
+                        System.out.println(reader.getElementText());
+                    }
+                }
+                if (nextEvent.isEndElement()) {
+                    EndElement endElement = nextEvent.asEndElement();
+                    if (endElement.getName().getLocalPart().equals("revision")) {
+                        insideRevision = false;
+                    }
+                }
+            }
+            System.out.println(i);
