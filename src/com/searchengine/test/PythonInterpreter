@@ -1,0 +1,12 @@
+PythonInterpreter interpreter = new PythonInterpreter();
+
+        // execute the Python code in my_module.py
+        interpreter.execfile("src/com/searchengine/lemmatizationFrench.py");
+
+        // call the Python function
+        PyObject myFunction = interpreter.get("lemmatizer");
+        interpreter.set("text", "voudrais non animaux % yeux sa dors @ écoutent couvre hommes j'ai ? ! ,,?!.");
+        PyObject result = myFunction.__call__(interpreter.get("text"));
+
+        // print the result
+        System.out.println(result);

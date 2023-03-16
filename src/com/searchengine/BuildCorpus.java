@@ -6,11 +6,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.StringTokenizer;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +17,8 @@ public class BuildCorpus {
     private String title = "";
     private String sourceFilePath;
     private String corpusPath;
+    private static String dicoFilePath = "ressources/top_words.txt";
+    private static String wordPageRelationPath = "ressources/word-page-relation.txt";
     public BuildCorpus(String sourceFilePath, String corpusPath) {
         this.sourceFilePath = sourceFilePath;
         this.corpusPath = corpusPath;
@@ -97,6 +96,259 @@ public class BuildCorpus {
         }
     }
 
+    public void buildDico() {
+        try {
+            FileReader fileReader = new FileReader(sourceFilePath);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+            xmlInputFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
+            XMLEventReader reader = xmlInputFactory.createXMLEventReader(bufferedReader);// we can use instead new FileInputStream(path.toFile() but not very powerful and its slow
+
+            Map<String, Integer> dictionary = new TreeMap<String, Integer>();
+            Set<String> uniqueWords = new HashSet<>();
+
+            Pattern pattern = Pattern.compile("[A-Za-zàâçéèêëîïôûùüÿñæœ]{2,}"); // extract all french words  or you can use that [\p{L}\p{M}*]{2,}
+
+            while (reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    if (startElement.getName().getLocalPart().equals("id")) {
+                        id = reader.getElementText();
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("title")) {
+                        title = reader.getElementText().toLowerCase();
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("text")) {
+                        String text = reader.getElementText().toLowerCase();
+                        Matcher matcherText = pattern.matcher(text);
+                        Matcher matcherTitle = pattern.matcher(title);
+
+                        while (matcherText.find()) {
+                            uniqueWords.add(matcherText.group().toLowerCase());
+                        }
+
+                        while (matcherTitle.find()) {
+                            uniqueWords.add(matcherTitle.group().toLowerCase());
+                        }
+
+                        for (String word : uniqueWords) {
+                            if (!dictionary.containsKey(word)) {
+                                dictionary.put(word, 1);
+                            } else {
+                                int i = dictionary.get(word) + 1;
+                                dictionary.put(word, i);
+                            }
+                        }
+
+                        uniqueWords.clear();
+
+                        i++;
+                        System.out.println(i);
+                    }
+                }
+            }
+            Comparator<String> valueComparator = new Comparator<String>() {
+                public int compare(String a, String b) {
+                    int compare = dictionary.get(b).compareTo(dictionary.get(a));
+                    if (compare == 0) {
+                        return a.compareTo(b);
+                    } else {
+                        return compare;
+                    }
+                }
+            };
+
+            TreeMap<String, Integer> sortedDictionaryByValue = new TreeMap<>(valueComparator);
+            sortedDictionaryByValue.putAll(dictionary);
+
+            BufferedWriter w = new BufferedWriter(new FileWriter(dicoFilePath));
+            int count = 0;
+            for (Map.Entry<String, Integer> entry : sortedDictionaryByValue.entrySet()) {
+                String word = entry.getKey();
+                int frequencyInCorpus = entry.getValue();
+                w.write(word + ": " + frequencyInCorpus);
+                w.newLine();
+                count++;
+                if (count == 50000) {
+                    break;
+                }
+            }
+            w.flush();
+//            // Printing the TreeMap in alphabetical order
+//            for (Map.Entry<String, Integer> entry : dictionary.entrySet()) {
+//                System.out.println(entry.getKey() + " : " + entry.getValue());
+//            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    // you need create dico first to execute that
+    public void buildWordRelation() {
+        try {
+            FileReader fileReader = new FileReader(sourceFilePath);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+            xmlInputFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
+            XMLEventReader reader = xmlInputFactory.createXMLEventReader(bufferedReader);// we can use instead new FileInputStream(path.toFile() but not very powerful and its slow
+
+            FileReader dicoFile = new FileReader(dicoFilePath);
+            BufferedReader b = new BufferedReader(dicoFile);
+            Map<String, Map<String, Integer>> wordPageFreq = new HashMap<>();
+            Map<String, Integer> pageFreqMap;
+            Pattern pattern = Pattern.compile("[A-Za-zàâçéèêëîïôûùüÿñæœ]{2,}");
+
+            String line;
+            String[] dicoWords = new String[50000];
+            int i = 0;
+            while ((line = b.readLine()) != null) {
+                // Skip empty lines
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] parts = line.split(":");
+                dicoWords[i] = parts[0].trim();
+                i++;
+            }
+
+//            this is so slow because of Collections.frequency
+//            i=0;
+//            while (reader.hasNext()) {
+//                XMLEvent nextEvent = reader.nextEvent();
+//                if (nextEvent.isStartElement()) {
+//                    StartElement startElement = nextEvent.asStartElement();
+//                    if (startElement.getName().getLocalPart().equals("id")) {
+//                        id = reader.getElementText();
+//                    }
+//
+//                    if (startElement.getName().getLocalPart().equals("title")) {
+//                        title = reader.getElementText();
+//                    }
+//
+//                    if (startElement.getName().getLocalPart().equals("text")) {
+//                        String text = reader.getElementText();
+//                        Matcher matcherText = pattern.matcher(text);
+//                        Matcher matcherTitle = pattern.matcher(title);
+//                        List<String> listOfWordsInPage = new ArrayList<String>();
+//
+//                        while (matcherText.find()) {
+//                            listOfWordsInPage.add(matcherText.group().toLowerCase());
+//                        }
+//
+//                        while (matcherTitle.find()) {
+//                            listOfWordsInPage.add(matcherTitle.group().toLowerCase());
+//                        }
+//
+//                        for(int j=0; j<dicoWords.length; j++){
+//                            int wordCount = Collections.frequency(listOfWordsInPage, dicoWords[j]);
+//                            if (wordCount != 0) {
+//                                if (!wordPageFreq.containsKey(dicoWords[j])) {
+//                                    pageFreqMap = new HashMap<>();
+//                                    pageFreqMap.put(id, wordCount);
+//                                } else {
+//                                    pageFreqMap = wordPageFreq.get(dicoWords[j]);
+//                                    pageFreqMap.put(id, wordCount);
+//                                }
+//                                wordPageFreq.put(dicoWords[j], pageFreqMap);
+//                            }
+//                        }
+//                        i++;
+//                        System.out.println(i);
+//                    }
+//                }
+//            }
+
+
+            Set<String> dicoWordsSet = new HashSet<>(Arrays.asList(dicoWords));
+            StringBuilder listOfWordsInPageBuilder = new StringBuilder();
+
+            i=0;
+            while (reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    if (startElement.getName().getLocalPart().equals("id")) {
+                        id = reader.getElementText();
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("title")) {
+                        title = reader.getElementText().toLowerCase();
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("text")) {
+                        String text = reader.getElementText().toLowerCase();
+                        Matcher matcherText = pattern.matcher(text);
+                        Matcher matcherTitle = pattern.matcher(title);
+
+                        // Use StringBuilder instead of List
+                        while (matcherText.find()) {
+                            listOfWordsInPageBuilder.append(matcherText.group().toLowerCase());
+                            listOfWordsInPageBuilder.append(" ");
+                        }
+
+                        while (matcherTitle.find()) {
+                            listOfWordsInPageBuilder.append(matcherTitle.group().toLowerCase());
+                            listOfWordsInPageBuilder.append(" ");
+                        }
+
+                        // Iterate over words in listOfWordsInPage and check if each word is in dicoWordsSet
+                        String[] listOfWordsInPage = listOfWordsInPageBuilder.toString().split(" ");
+
+                        Map<String, Integer> wordCounts = new HashMap<>();
+                        for (String word : listOfWordsInPage) {
+                            if (dicoWordsSet.contains(word)) {
+                                int count = wordCounts.getOrDefault(word, 0);
+                                wordCounts.put(word, count + 1);
+                            }
+                        }
+
+                        // Iterate over wordCounts and add to wordPageFreq
+                        for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
+                            String word = entry.getKey();
+                            int count = entry.getValue();
+                            if (count != 0) {
+                                if (!wordPageFreq.containsKey(word)) {
+                                    pageFreqMap = new HashMap<>();
+                                } else {
+                                    pageFreqMap = wordPageFreq.get(word);
+                                }
+                                pageFreqMap.put(id, count);
+                                wordPageFreq.put(word, pageFreqMap);
+                            }
+                        }
+
+                        i++;
+                        System.out.println(i);
+
+                        // Reset StringBuilder
+                        listOfWordsInPageBuilder.setLength(0);
+                    }
+                }
+            }
+
+            BufferedWriter w = new BufferedWriter(new FileWriter(wordPageRelationPath));
+            for (String word : wordPageFreq.keySet()) {
+                w.write(word + ":");
+                pageFreqMap = wordPageFreq.get(word);
+                for (String page : pageFreqMap.keySet()) {
+                    int frequency = pageFreqMap.get(page);
+                    w.write(page + "," + frequency + ";");
+                }
+                w.newLine();
+            }
+
+            w.flush();
+            w.close();
+
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
     public static int calculatePageNumber(String filePath) {
         int i = 0;
         try {
@@ -154,7 +406,7 @@ public class BuildCorpus {
         text = text.replaceAll("(?s)==\\s*Sources\\s*==.*", "");
         text = text.replaceAll("(?s)==\\s*Références\\s*==.*", "");
 //        text = text.replaceAll("[^\s]*'", ""); // j' l'
-        text = text.toLowerCase();
+//        text = text.toLowerCase(); // it's not good here there is page named Champ and other named CHAMP
         text = text.replaceAll("[\n]{2,}", "\n");
         text = text.trim().replaceAll("[ ]{2,}", " ");
 
