@@ -17,6 +17,7 @@ public class Main {
     static String testInput = "ressources/input.xml";
     static String corpusPath = "ressources/corpus.xml";
     static String matrixCLIPath = "ressources/CLI.txt";
+    static String matrixCLIPathTest = "ressources/CLI2.txt";
     public static void main(String[] args) {
 
 
@@ -34,5 +35,13 @@ public class Main {
 //        BuildCLI b = new BuildCLI(corpusPath, matrixCLIPath);
 //        b.buildCLI();
 
+        Pagerank p = new Pagerank(matrixCLIPath);
+
+        p.pagerank();
+
     }
+
+
+
+
 }
