@@ -61,7 +61,7 @@ public class Pagerank {
 
             BufferedWriter w = new BufferedWriter(new FileWriter(pagerankFile));
             for (int i = 0; i < proba.size(); i++) {
-                w.write(proba.get(i).toString() + "\n");
+                w.write(i + ":" +proba.get(i).toString() + "\n");
             }
 
             w.flush();

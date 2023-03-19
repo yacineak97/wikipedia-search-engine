@@ -78,9 +78,9 @@ public class BuildCorpus {
                                         writer.writeCharacters(text);
                                     writer.writeEndElement();
                                 writer.writeEndElement();
+                                i++;
+                                System.out.println(i);
                             }
-                            i++;
-                            System.out.println(i);
                         }
                     }
                 }
@@ -272,7 +272,7 @@ public class BuildCorpus {
                 if (nextEvent.isStartElement()) {
                     StartElement startElement = nextEvent.asStartElement();
                     if (startElement.getName().getLocalPart().equals("id")) {
-                        id = reader.getElementText();
+                        id = reader.getElementText().trim();
                     }
 
                     if (startElement.getName().getLocalPart().equals("title")) {
@@ -309,16 +309,16 @@ public class BuildCorpus {
                         // Iterate over wordCounts and add to wordPageFreq
                         for (Map.Entry<String, Integer> entry : wordCounts.entrySet()) {
                             String word = entry.getKey();
-                            int count = entry.getValue();
-                            if (count != 0) {
-                                if (!wordPageFreq.containsKey(word)) {
-                                    pageFreqMap = new HashMap<>();
-                                } else {
-                                    pageFreqMap = wordPageFreq.get(word);
+                                int count = entry.getValue();
+                                if (count != 0) {
+                                    if (!wordPageFreq.containsKey(word)) {
+                                        pageFreqMap = new HashMap<>();
+                                    } else {
+                                        pageFreqMap = wordPageFreq.get(word);
+                                    }
+                                    pageFreqMap.put(id, count);
+                                    wordPageFreq.put(word, pageFreqMap);
                                 }
-                                pageFreqMap.put(id, count);
-                                wordPageFreq.put(word, pageFreqMap);
-                            }
                         }
 
                         i++;
@@ -344,6 +344,54 @@ public class BuildCorpus {
             w.flush();
             w.close();
 
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void pageIdToTitle(String srcFile, String destFile) {
+        try {
+            FileReader fileReader = new FileReader(srcFile);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+            xmlInputFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
+            XMLEventReader reader = xmlInputFactory.createXMLEventReader(bufferedReader);// we can use instead new FileInputStream(path.toFile() but not very powerful and its slow
+
+            Map<Integer, String> dictionary = new TreeMap<>();
+            int id = 0;
+            String title = "";
+
+            int i = 0;
+            while (reader.hasNext()) {
+                XMLEvent nextEvent = reader.nextEvent();
+                if (nextEvent.isStartElement()) {
+                    StartElement startElement = nextEvent.asStartElement();
+                    if (startElement.getName().getLocalPart().equals("id")) {
+                        id = Integer.parseInt(reader.getElementText());
+                    }
+
+                    if (startElement.getName().getLocalPart().equals("title")) {
+                        title = reader.getElementText();
+                        if (dictionary.containsKey(id)) {
+                            System.out.println("! Duplicate Page ID : " + id);
+                        }
+                        dictionary.put(id, title);
+//                        System.out.println(i);
+                        i++;
+                    }
+                }
+            }
+
+            BufferedWriter w = new BufferedWriter(new FileWriter(destFile));
+            for (Map.Entry<Integer, String> entry : dictionary.entrySet()) {
+                id = entry.getKey();
+                title = entry.getValue();
+                w.write(id + ": " + title);
+                w.newLine();
+            }
+
+            w.flush();
+            w.close();
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -413,3 +461,15 @@ public class BuildCorpus {
         return text;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

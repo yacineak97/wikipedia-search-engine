@@ -1,0 +1,10 @@
+3: Algèbre linéaire
+4: Algorithmique
+5: Arsène Lupin
+8: Algorithme
+9: Afghanistan
+2: Ada (langage)
+7: Auvergne
+0: Aisne (département)
+1: Allier (département)
+6: Ariège (département)
