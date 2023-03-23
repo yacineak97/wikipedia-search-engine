@@ -4,11 +4,10 @@ import bisect
 import spacy
 import unicodedata
 
-nlp = spacy.load('fr_core_news_md')
+nlp = spacy.load('fr_core_news_sm')
 wikipedia_base_url = "https://fr.wikipedia.org/wiki/"
+# Define a list of funny messages
 
-
-i = 0
 word_idf = {}
 # mutiply scores by IDF
 with open("ressources/idf.txt", "r", buffering=8192, encoding='utf-8') as file:
@@ -30,6 +29,35 @@ with open("ressources/word-maxs.txt", "r", buffering=8192, encoding='utf-8') as 
         float_list = [float(x) for x in maxs]
         word_maxs[word] = float_list
 
+pagerank = {}
+with open("ressources/pagerank-scores.txt", "r", buffering=8192, encoding='utf-8') as file:
+    for line in file:
+        lineCleaned = line.strip()
+        page_id = int(lineCleaned.split(":")[0])
+        rank = float(lineCleaned.split(":")[1])
+        pagerank[page_id] = rank
+
+page_id_to_title = {}
+with open("ressources/pageid_title.txt", "r", buffering=8192, encoding='utf-8') as file:
+    for line in file:
+        lineCleaned = line.strip()
+        page_id = int(lineCleaned.split(":")[0])
+        title = lineCleaned.split(":")[1]
+        page_id_to_title[page_id] = title
+
+funny_messages = [
+    "Congratulations! You're one tenth of the way to being a billionaire!",
+    "Wow, you've made it 20%! Just 80% more to go!",
+    "30% complete! That's almost one third!",
+    "You're 40% of the way there! Keep going!",
+    "50%! You're halfway to becoming a billionaire!",
+    "60% complete! You're doing great!",
+    "70% done! You're in the home stretch now!",
+    "80% complete! Just one fifth left!",
+    "90%! You're almost there!",
+    "Congratulations! You're a billionaire! (just kidding, you still have a ways to go)\n\n\n"
+]
+
 i = 0
 word_pages_relation = {}
 with open("ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
@@ -49,29 +77,19 @@ with open("ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
         word_pages_relation[word] = pages_score
 
         i += 1
-        print(i)
+        percentage = i/316
 
-pagerank = {}
-with open("ressources/pagerank-scores.txt", "r", buffering=8192, encoding='utf-8') as file:
-    for line in file:
-        lineCleaned = line.strip()
-        page_id = int(lineCleaned.split(":")[0])
-        rank = float(lineCleaned.split(":")[1])
-        pagerank[page_id] = rank
-
-page_id_to_title = {}
-with open("ressources/pageid_title.txt", "r", buffering=8192, encoding='utf-8') as file:
-    for line in file:
-        lineCleaned = line.strip()
-        page_id = int(lineCleaned.split(":")[0])
-        title = lineCleaned.split(":")[1]
-        page_id_to_title[page_id] = title
+        if i % 3160 == 0:
+            index = int(percentage // 10)
+            print(funny_messages[index-1])
+        elif i % 316 == 0:
+            print('{:.2f}%'.format(percentage))
 
 
 def wand(request_words, word_pages_relation, word_idf):
     a = 10**(-3)
     b = 1-10**(-3)
-    top_k = 300
+    top_k = 1000
     pile = [(0, 0) for _ in range(top_k)]
     gamma = 0
     words_requests_ratio = 2/3
@@ -101,15 +119,18 @@ def wand(request_words, word_pages_relation, word_idf):
     gamma = pile[-1][1]
 
     pointers = dict(sorted(pointers.items(),
-                    key=lambda item: word_pages_relation[item[0]][item[1]][0]))
+                    key=lambda item: pagerank[word_pages_relation[item[0]][item[1]][0]], reverse=True))
 
     words_ordrered_in_pointer = list(pointers.keys())
 
     potential_maxs = 0
     pivot_index = 0
+
     while (True):
         potential_maxs = 0
-        max_pagerank = 0
+        first_word = words_ordrered_in_pointer[0]
+        max_pagerank = pagerank[word_pages_relation[first_word]
+                                [pointers[first_word]][0]]
         stop = 0
         for i in range(len(pointers)):
             potential_maxs += word_maxs[words_ordrered_in_pointer[i]
@@ -117,15 +138,6 @@ def wand(request_words, word_pages_relation, word_idf):
 
             not_pivot_again = (pointers[words_ordrered_in_pointer[i]]) != (
                 len(word_pages_relation[words_ordrered_in_pointer[i]]) - 1)
-
-            w2 = words_ordrered_in_pointer[i]
-            max_pagerank = pagerank[word_pages_relation[w2][pointers[w2]][0]]
-            for j in range(i):
-                w = words_ordrered_in_pointer[j]
-                pagerank_current = pagerank[word_pages_relation[w]
-                                            [pointers[w]][0]]
-                if (max_pagerank < pagerank_current):
-                    max_pagerank = pagerank_current
 
             if potential_maxs + max_pagerank >= gamma and not_pivot_again:
                 pivot_index = i
@@ -141,12 +153,26 @@ def wand(request_words, word_pages_relation, word_idf):
         pivot = word_pages_relation[words_ordrered_in_pointer[pivot_index]
                                     ][pointers[words_ordrered_in_pointer[pivot_index]]][0]
 
-        for j in range(pivot_index):
+        pivot_pagerank = pagerank[pivot]
+        for j in range(pivot_index-1):
             w = words_ordrered_in_pointer[j]
-            for i in range(pointers[w], len(word_pages_relation[w])):
-                if (word_pages_relation[w][i][0] >= pivot):
-                    pointers[w] = i
+
+            word_pages_relation[w]
+
+            # binary search
+            lo, hi = 0, len(word_pages_relation[w]) - 1
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:
+                    lo = mid
                     break
+                elif pagerank[word_pages_relation[w][mid][0]] < pivot_pagerank:
+                    hi = mid - 1
+                else:
+                    lo = mid + 1
+
+            if (lo < len(word_pages_relation[w])):
+                pointers[w] = lo
 
         # this k is the number of request words that contains one page
         k = 0
@@ -180,7 +206,7 @@ def wand(request_words, word_pages_relation, word_idf):
                     pointers[words_ordrered_in_pointer[i]] += 1
 
         pointers = dict(sorted(pointers.items(),
-                               key=lambda item: word_pages_relation[item[0]][item[1]][0]))
+                               key=lambda item: pagerank[word_pages_relation[item[0]][item[1]][0]], reverse=True))
 
         words_ordrered_in_pointer = list(pointers.keys())
 

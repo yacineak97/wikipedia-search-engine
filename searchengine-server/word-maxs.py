@@ -2,7 +2,7 @@ import io
 
 word_scores = {}
 i = 0
-with open("tf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -21,7 +21,7 @@ with open("tf.txt", "r", buffering=8192, encoding='utf-8') as file:
 i = 0
 word_idf = {}
 # mutiply scores by IDF
-with open("idf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/idf.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -95,7 +95,7 @@ for word in word_scores:
 
 
 i = 0
-with open('word-maxs.txt', 'wb') as f:
+with open('server/ressources/word-maxs.txt', 'wb') as f:
     writer = io.BufferedWriter(f)
 
     for word in word_maxs:
@@ -104,7 +104,8 @@ with open('word-maxs.txt', 'wb') as f:
         pieces = [word, ':']
 
         for score in scores:
-            pieces.append(f'{score},')
+            scientific_notation = '{:.7E}'.format(score)
+            pieces.append(f'{scientific_notation},')
 
         line = ''.join(pieces) + '\n'
 

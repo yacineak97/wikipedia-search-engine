@@ -6,7 +6,7 @@ nlp = spacy.load('fr_core_news_md')
 
 dico_words = {}
 
-with open("top_words.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/top_words.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip().split(":")
         word = lineCleaned[0]
@@ -43,7 +43,7 @@ for word in dico_words:
     print(i)
 
 
-with open('final-dico.txt', 'wb') as f:
+with open('server/ressources/final-dico.txt', 'wb') as f:
     writer = io.BufferedWriter(f)
 
     for word in new_dico_words:

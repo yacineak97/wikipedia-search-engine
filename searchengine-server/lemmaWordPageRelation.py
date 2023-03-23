@@ -9,7 +9,7 @@ total_corpus_page_number = 94374
 word_page_relation = {}
 pages_freq = {}
 i = 0
-with open("word-page-relation.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/word-page-relation.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -88,7 +88,7 @@ for word in word_page_relation:
 
 
 i = 0
-with open('final-word-page-relation.txt', 'wb') as f:
+with open('server/ressources/final-word-page-relation.txt', 'wb') as f:
     writer = io.BufferedWriter(f, buffer_size=1024 * 1024)
 
     for word, pages in new_word_page.items():

@@ -5,7 +5,7 @@ total_corpus_page_number = 94374
 
 dico_words = {}
 
-with open("final-dico.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/final-dico.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip().split(":")
         word = lineCleaned[0]
@@ -16,7 +16,7 @@ with open("final-dico.txt", "r", buffering=8192, encoding='utf-8') as file:
 
 print(len(dico_words))
 
-with open('idf.txt', 'wb') as f:
+with open('server/ressources/idf.txt', 'wb') as f:
     writer = io.BufferedWriter(f)
     for word in dico_words:
         line = word + ":" + str(dico_words[word]) + "\n"

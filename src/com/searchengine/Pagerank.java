@@ -14,7 +14,7 @@ public class Pagerank {
     }
 
     public void pagerank() {
-        int k = 50;
+        int k = 300;
         int totalNumberOfPages = 94374;
         try {
             FileReader fileReader = new FileReader(matrixCLIPath);
@@ -57,6 +57,7 @@ public class Pagerank {
 
             for (int i = 0; i < k; i++) {
                 proba = matrixVectorProduct(C, L, I, proba);
+                System.out.println(i);
             }
 
             BufferedWriter w = new BufferedWriter(new FileWriter(pagerankFile));
@@ -105,3 +106,6 @@ public class Pagerank {
         return product;
     }
 }
+
+
+

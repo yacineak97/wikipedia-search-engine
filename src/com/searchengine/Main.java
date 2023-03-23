@@ -31,19 +31,19 @@ public class Main {
 //        b.buildDico();
 //
 //        you must execute first b.buildDico() to execute b.buildWordRelation()
-        BuildCorpus b2 = new BuildCorpus(corpusPath, "");
-        b2.buildWordRelation();
-
-        // build CLI Matrix
-        BuildCLI b = new BuildCLI(corpusPath, matrixCLIPath);
-        b.buildCLI();
+//        BuildCorpus b2 = new BuildCorpus(corpusPath, "");
+//        b2.buildWordRelation();
+//
+//        // build CLI Matrix
+//        BuildCLI b = new BuildCLI(corpusPath, matrixCLIPath);
+//        b.buildCLI();
 
         Pagerank p = new Pagerank(matrixCLIPath);
 
         p.pagerank();
 
         // create a file mapping id to title (need that for the URL)
-        BuildCorpus.pageIdToTitle(corpusPath, pageIdTitlePath);
+//        BuildCorpus.pageIdToTitle(corpusPath, pageIdTitlePath);
 
 
     }

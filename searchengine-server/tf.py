@@ -6,7 +6,7 @@ pages_freq = {}
 normes = {}
 pages_list = []
 i = 0
-with open("final-word-page-relation.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("server/ressources/final-word-page-relation.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -28,6 +28,15 @@ with open("final-word-page-relation.txt", "r", buffering=8192, encoding='utf-8')
         i += 1
         print(i)
 
+
+pagerank = {}
+with open("server/ressources/pagerank-scores.txt", "r", buffering=8192, encoding='utf-8') as file:
+    for line in file:
+        lineCleaned = line.strip()
+        page_id = int(lineCleaned.split(":")[0])
+        rank = float(lineCleaned.split(":")[1])
+        pagerank[page_id] = rank
+
 i = 0
 # normalize the frequences
 for word in word_page_relation:
@@ -35,13 +44,16 @@ for word in word_page_relation:
     for page_id in pages:
         pages[page_id] = pages[page_id] / math.sqrt(normes[page_id])
 
-    sorted_pages_freq = sorted(pages.items(), key=lambda x: x[0])
+    # sort by pagerank in descending order
+    sorted_pages_freq = sorted(
+        pages.items(), key=lambda x: pagerank[x[0]], reverse=True)
     converted_pages_freq_to_dict = dict(sorted_pages_freq)
 
     word_page_relation[word] = converted_pages_freq_to_dict
 
     i += 1
     print(i)
+
 
 # this is slow
 # i = 0
@@ -65,13 +77,14 @@ for word in word_page_relation:
 #     writer.close()
 
 i = 0
-with open('tf.txt', 'wb') as f:
+with open('server/ressources/tf.txt', 'wb') as f:
     writer = io.BufferedWriter(f, buffer_size=1024 * 1024)
 
     for word, pages in word_page_relation.items():
         pieces = [word, ':']
         for page, count in pages.items():
-            pieces.append(f'{page},{count};')
+            scientific_notation = '{:.7E}'.format(count)
+            pieces.append(f'{page},{scientific_notation};')
         line = ''.join(pieces) + '\n'
         writer.write(line.encode("utf-8"))
         i += 1

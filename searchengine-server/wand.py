@@ -9,7 +9,7 @@ wikipedia_base_url = "https://fr.wikipedia.org/wiki/"
 i = 0
 word_idf = {}
 # mutiply scores by IDF
-with open("idf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("idf2.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -54,7 +54,7 @@ with open("tf.txt", "r", buffering=8192, encoding='utf-8') as file:
         print(i)
 i = 0
 pagerank = {}
-with open("pagerank-scores.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("page_rank.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         page_id = int(lineCleaned.split(":")[0])
@@ -64,7 +64,7 @@ with open("pagerank-scores.txt", "r", buffering=8192, encoding='utf-8') as file:
         print(i)
 i = 0
 page_id_to_title = {}
-with open("pageid_title.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("pageid_title2.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         page_id = int(lineCleaned.split(":")[0])
@@ -77,7 +77,7 @@ with open("pageid_title.txt", "r", buffering=8192, encoding='utf-8') as file:
 def wand(request_words, word_pages_relation, word_idf):
     a = 10**(-3)
     b = 1-10**(-3)
-    top_k = 15
+    top_k = 1000
     pile = [(0, 0) for _ in range(top_k)]
     gamma = 0
     words_requests_ratio = 2/3
@@ -159,15 +159,18 @@ def wand(request_words, word_pages_relation, word_idf):
     gamma = pile[-1][1]
 
     pointers = dict(sorted(pointers.items(),
-                    key=lambda item: word_pages_relation[item[0]][item[1]][0]))
+                    key=lambda item: pagerank[word_pages_relation[item[0]][item[1]][0]], reverse=True))
 
     words_ordrered_in_pointer = list(pointers.keys())
 
     potential_maxs = 0
     pivot_index = 0
+
     while (True):
         potential_maxs = 0
-        max_pagerank = 0
+        first_word = words_ordrered_in_pointer[0]
+        max_pagerank = pagerank[word_pages_relation[first_word]
+                                [pointers[first_word]][0]]
         stop = 0
         for i in range(len(pointers)):
             potential_maxs += word_maxs[words_ordrered_in_pointer[i]
@@ -175,15 +178,6 @@ def wand(request_words, word_pages_relation, word_idf):
 
             not_pivot_again = (pointers[words_ordrered_in_pointer[i]]) != (
                 len(word_pages_relation[words_ordrered_in_pointer[i]]) - 1)
-
-            w2 = words_ordrered_in_pointer[i]
-            max_pagerank = pagerank[word_pages_relation[w2][pointers[w2]][0]]
-            for j in range(i):
-                w = words_ordrered_in_pointer[j]
-                pagerank_current = pagerank[word_pages_relation[w]
-                                            [pointers[w]][0]]
-                if (max_pagerank < pagerank_current):
-                    max_pagerank = pagerank_current
 
             if potential_maxs + max_pagerank >= gamma and not_pivot_again:
                 pivot_index = i
@@ -206,12 +200,25 @@ def wand(request_words, word_pages_relation, word_idf):
         #     if (max_pagerank < pagerank_current):
         #         max_pagerank = pagerank_current
 
-        for j in range(pivot_index):
+        pivot_pagerank = pagerank[pivot]
+        for j in range(pivot_index-1):
             w = words_ordrered_in_pointer[j]
-            for i in range(pointers[w], len(word_pages_relation[w])):
-                if (word_pages_relation[w][i][0] >= pivot):
-                    pointers[w] = i
+
+            word_pages_relation[w]
+
+            # binary search
+            lo, hi = 0, len(word_pages_relation[w]) - 1
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:
+                    lo = mid
                     break
+                elif pagerank[word_pages_relation[w][mid][0]] < pivot_pagerank:
+                    hi = mid - 1
+                else:
+                    lo = mid + 1
+
+            pointers[w] = lo
 
         # this k is the number of request words that contains one page
         k = 0
@@ -245,7 +252,7 @@ def wand(request_words, word_pages_relation, word_idf):
                     pointers[words_ordrered_in_pointer[i]] += 1
 
         pointers = dict(sorted(pointers.items(),
-                               key=lambda item: word_pages_relation[item[0]][item[1]][0]))
+                               key=lambda item: pagerank[word_pages_relation[item[0]][item[1]][0]], reverse=True))
 
         words_ordrered_in_pointer = list(pointers.keys())
 
@@ -276,10 +283,22 @@ def getURLs(pages):
     return pages_list_urls
 
 
+def binary_search_desc(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            hi = mid - 1
+        else:
+            lo = mid + 1
+    return lo if lo < len(arr) else -1
+
+
 best_pages = wand("fermé    écoute    écoutez     ",
                   word_pages_relation, word_idf)
 
-# print(best_pages)
 page_results = getURLs(best_pages)
 print(page_results)
 
