@@ -2,7 +2,7 @@ import io
 
 word_scores = {}
 i = 0
-with open("server/ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -21,7 +21,7 @@ with open("server/ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as 
 i = 0
 word_idf = {}
 # mutiply scores by IDF
-with open("server/ressources/idf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/idf2.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -95,7 +95,7 @@ for word in word_scores:
 
 
 i = 0
-with open('server/ressources/word-maxs.txt', 'wb') as f:
+with open('test-wand-data/word-maxs.txt', 'wb') as f:
     writer = io.BufferedWriter(f)
 
     for word in word_maxs:

@@ -46,7 +46,7 @@ for word in word_page_relation:
 
     # sort by pagerank in descending order
     sorted_pages_freq = sorted(
-        pages.items(), key=lambda x: pagerank[x[0]], reverse=True)
+        pages.items(), key=lambda x: (pagerank[x[0]], -x[0]), reverse=True)
     converted_pages_freq_to_dict = dict(sorted_pages_freq)
 
     word_page_relation[word] = converted_pages_freq_to_dict

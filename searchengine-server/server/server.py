@@ -4,7 +4,7 @@ import bisect
 import spacy
 import unicodedata
 
-nlp = spacy.load('fr_core_news_sm')
+nlp = spacy.load('fr_core_news_md')
 wikipedia_base_url = "https://fr.wikipedia.org/wiki/"
 # Define a list of funny messages
 
@@ -160,7 +160,7 @@ def wand(request_words, word_pages_relation, word_idf):
             word_pages_relation[w]
 
             # binary search
-            lo, hi = 0, len(word_pages_relation[w]) - 1
+            lo, hi = pointers[w], len(word_pages_relation[w]) - 1
             while lo <= hi:
                 mid = (lo + hi) // 2
                 if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:

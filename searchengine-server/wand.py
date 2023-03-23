@@ -9,7 +9,7 @@ wikipedia_base_url = "https://fr.wikipedia.org/wiki/"
 i = 0
 word_idf = {}
 # mutiply scores by IDF
-with open("idf2.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/idf2.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -20,7 +20,7 @@ with open("idf2.txt", "r", buffering=8192, encoding='utf-8') as file:
         print(i)
 i = 0
 word_maxs = {}
-with open("word-maxs.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/word-maxs.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -34,7 +34,7 @@ with open("word-maxs.txt", "r", buffering=8192, encoding='utf-8') as file:
 
 i = 0
 word_pages_relation = {}
-with open("tf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -54,7 +54,7 @@ with open("tf.txt", "r", buffering=8192, encoding='utf-8') as file:
         print(i)
 i = 0
 pagerank = {}
-with open("page_rank.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/page_rank.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         page_id = int(lineCleaned.split(":")[0])
@@ -64,7 +64,7 @@ with open("page_rank.txt", "r", buffering=8192, encoding='utf-8') as file:
         print(i)
 i = 0
 page_id_to_title = {}
-with open("pageid_title2.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("test-wand-data/pageid_title2.txt", "r", buffering=8192, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         page_id = int(lineCleaned.split(":")[0])
@@ -75,9 +75,9 @@ with open("pageid_title2.txt", "r", buffering=8192, encoding='utf-8') as file:
 
 
 def wand(request_words, word_pages_relation, word_idf):
-    a = 10**(-3)
-    b = 1-10**(-3)
-    top_k = 1000
+    a = 1
+    b = 1
+    top_k = 3
     pile = [(0, 0) for _ in range(top_k)]
     gamma = 0
     words_requests_ratio = 2/3
@@ -207,7 +207,7 @@ def wand(request_words, word_pages_relation, word_idf):
             word_pages_relation[w]
 
             # binary search
-            lo, hi = 0, len(word_pages_relation[w]) - 1
+            lo, hi = pointers[w], len(word_pages_relation[w]) - 1
             while lo <= hi:
                 mid = (lo + hi) // 2
                 if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:
@@ -218,8 +218,10 @@ def wand(request_words, word_pages_relation, word_idf):
                 else:
                     lo = mid + 1
 
-            pointers[w] = lo
+            if (lo < len(word_pages_relation[w])):
+                pointers[w] = lo
 
+        print(pointers)
         # this k is the number of request words that contains one page
         k = 0
         score_pivot_page = 0
@@ -230,10 +232,13 @@ def wand(request_words, word_pages_relation, word_idf):
                 k += 1
                 score_current_page = word_pages_relation[words_ordrered_in_pointer[i]
                                                          ][pointers[words_ordrered_in_pointer[i]]][1]
+                print(score_current_page)
                 score_pivot_page += score_current_page
 
         score_pivot_page = a*(score_pivot_page / nr)
         score_pivot_page += b*(max_pagerank)
+
+        print(pivot, score_pivot_page)
 
         if ((k/len(pointers) >= words_requests_ratio) and (score_pivot_page >= gamma)):
             pile.pop()
@@ -243,6 +248,8 @@ def wand(request_words, word_pages_relation, word_idf):
 
         if potential_maxs < gamma or stop == len(pointers):
             break
+
+        print("gamma", pile)
 
         for i in range(len(pointers)):
             page_current = word_pages_relation[words_ordrered_in_pointer[i]
