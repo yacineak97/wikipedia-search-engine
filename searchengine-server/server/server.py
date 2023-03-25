@@ -3,6 +3,7 @@ import math
 import bisect
 import spacy
 import unicodedata
+import io
 
 nlp = spacy.load('fr_core_news_md')
 wikipedia_base_url = "https://fr.wikipedia.org/wiki/"
@@ -60,7 +61,7 @@ funny_messages = [
 
 i = 0
 word_pages_relation = {}
-with open("ressources/tf.txt", "r", buffering=8192, encoding='utf-8') as file:
+with open("ressources/tf.txt", "r", buffering=1024 * 1024, encoding='utf-8') as file:
     for line in file:
         lineCleaned = line.strip()
         word = lineCleaned.split(":")[0]
@@ -136,6 +137,7 @@ def wand(request_words, word_pages_relation, word_idf):
             potential_maxs += word_maxs[words_ordrered_in_pointer[i]
                                         ][pointers[words_ordrered_in_pointer[i]]]
 
+            # this variable to don't take the last page as a pivot, to make sure that we don't take the last element more than one time as a pivot
             not_pivot_again = (pointers[words_ordrered_in_pointer[i]]) != (
                 len(word_pages_relation[words_ordrered_in_pointer[i]]) - 1)
 
@@ -161,17 +163,18 @@ def wand(request_words, word_pages_relation, word_idf):
 
             # binary search
             lo, hi = pointers[w], len(word_pages_relation[w]) - 1
+            result = -1
             while lo <= hi:
                 mid = (lo + hi) // 2
-                if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:
-                    lo = mid
-                    break
-                elif pagerank[word_pages_relation[w][mid][0]] < pivot_pagerank:
+                if pagerank[word_pages_relation[w][mid][0]] <= pivot_pagerank:
+                    result = mid
                     hi = mid - 1
+                    if pagerank[word_pages_relation[w][hi][0]] > pivot_pagerank:
+                        break
                 else:
                     lo = mid + 1
 
-            if (lo < len(word_pages_relation[w])):
+            if (result != -1):
                 pointers[w] = lo
 
         # this k is the number of request words that contains one page
