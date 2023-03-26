@@ -77,6 +77,11 @@ with open("test-wand-data/pageid_title2.txt", "r", buffering=8192, encoding='utf
 def wand(request_words, word_pages_relation, word_idf):
     a = 1
     b = 1
+    # # we consider Nr in request of three words
+    # a = 10**(-3)
+    # b = 1-10**(-3)
+    # # a = 0.7066379 * 10**(-3)
+    # # b = 1
     top_k = 3
     pile = [(0, 0) for _ in range(top_k)]
     gamma = 0
@@ -103,6 +108,26 @@ def wand(request_words, word_pages_relation, word_idf):
             nr += word_idf[word] ** 2
 
     nr = math.sqrt(nr)
+
+    # this is used to calculate means to compare a and b parameters
+    # print("Nr ", nr)
+
+    # k = 0
+    # s = 0
+    # for v in pagerank:
+    #     s += pagerank[v]
+    #     k += 1
+
+    # print("Pagerank ", s/k)
+
+    # k = 0
+    # s = 0
+    # for v in word_pages_relation:
+    #     for c in word_pages_relation[v]:
+    #         s += c[1]
+    #         k += 1
+
+    # print("Word Page ", s/k)
 
     # # initialize pile
     # pointers = dict(sorted(pointers.items(),
@@ -208,17 +233,18 @@ def wand(request_words, word_pages_relation, word_idf):
 
             # binary search
             lo, hi = pointers[w], len(word_pages_relation[w]) - 1
+            result = -1
             while lo <= hi:
                 mid = (lo + hi) // 2
-                if pagerank[word_pages_relation[w][mid][0]] == pivot_pagerank:
-                    lo = mid
-                    break
-                elif pagerank[word_pages_relation[w][mid][0]] < pivot_pagerank:
+                if pagerank[word_pages_relation[w][mid][0]] <= pivot_pagerank:
+                    result = mid
                     hi = mid - 1
+                    if pagerank[word_pages_relation[w][hi][0]] > pivot_pagerank:
+                        break
                 else:
                     lo = mid + 1
 
-            if (lo < len(word_pages_relation[w])):
+            if (result != -1):
                 pointers[w] = lo
 
         print(pointers)

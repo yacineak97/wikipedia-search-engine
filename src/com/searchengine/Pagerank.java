@@ -106,6 +106,3 @@ public class Pagerank {
         return product;
     }
 }
-
-
-

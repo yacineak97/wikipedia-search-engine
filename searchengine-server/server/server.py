@@ -88,8 +88,11 @@ with open("ressources/tf.txt", "r", buffering=1024 * 1024, encoding='utf-8') as 
 
 
 def wand(request_words, word_pages_relation, word_idf):
+    # we consider Nr in request of three words
     a = 10**(-3)
     b = 1-10**(-3)
+    # a = 0.7066379 * 10**(-3)
+    # b = 1
     top_k = 1000
     pile = [(0, 0) for _ in range(top_k)]
     gamma = 0
@@ -116,6 +119,26 @@ def wand(request_words, word_pages_relation, word_idf):
             nr += word_idf[word] ** 2
 
     nr = math.sqrt(nr)
+
+    # this is used to calculate means to compare a and b parameters
+    # print("Nr ", nr)
+
+    # k = 0
+    # s = 0
+    # for v in pagerank:
+    #     s += pagerank[v]
+    #     k += 1
+
+    # print("Pagerank ", s/k)
+
+    # k = 0
+    # s = 0
+    # for v in word_pages_relation:
+    #     for c in word_pages_relation[v]:
+    #         s += c[1]
+    #         k += 1
+
+    # print("Word Page ", s/k)
 
     gamma = pile[-1][1]
 
@@ -190,7 +213,7 @@ def wand(request_words, word_pages_relation, word_idf):
                 score_pivot_page += score_current_page
 
         score_pivot_page = a*(score_pivot_page / nr)
-        score_pivot_page += b*(max_pagerank)
+        score_pivot_page += b*(pivot_pagerank)
 
         if ((k/len(pointers) >= words_requests_ratio) and (score_pivot_page >= gamma)):
             pile.pop()
