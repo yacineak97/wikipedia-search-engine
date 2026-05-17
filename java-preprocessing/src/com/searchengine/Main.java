@@ -1,5 +1,7 @@
 package com.searchengine;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -20,6 +22,15 @@ public class Main {
     static String pageIdTitlePath = BASE_RESOURCES.resolve("java-processed/pageid_title.txt").toString();
 
     public static void main(String[] args) {
+
+        try {
+            // Create java-processed directory if it doesn't exist
+            Files.createDirectories(BASE_RESOURCES.resolve("java-processed"));
+
+        } catch (IOException e) {
+            System.err.println("Failed to create directories: " + e.getMessage());
+            return;
+        }
 
         BuildCorpus buildCorpus = new BuildCorpus(sourceFileSmallPath, corpusPath);
         buildCorpus.buildCorpus();
