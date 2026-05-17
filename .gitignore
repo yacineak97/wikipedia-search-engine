@@ -1,3 +1,9 @@
-/ressources/
-/out/
-/searchengine-server/server/ressources/
+/resources/java-processed
+
+/resources/python-processed
+
+/resources/raw/frwiki-20230320-pages-articles.xml
+/resources/raw/frwiki-20230320-pages-articles.xml.bz2
+
+.venv/
+__pycache__/

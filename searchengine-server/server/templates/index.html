@@ -1,13 +1,41 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Search</title>
-  </head>
-  <body>
-    <h1>Search</h1>
-    <form method="POST" action="/">
-      <input type="text" name="query" placeholder="Search query" />
-      <input type="submit" value="Search" />
-    </form>
-  </body>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Search Engine</title>
+
+		<link
+			rel="stylesheet"
+			href="{{ url_for('static', filename='style.css') }}"
+		/>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<div class="hero">
+			<div class="logo"><span class="accent">W</span>ikiSearch</div>
+
+			<p class="subtitle">
+				French Wikipedia search engine using TF-IDF, PageRank, WAND, and
+				lemmatization.
+			</p>
+
+			<form method="POST" class="search-box">
+				<input
+					type="text"
+					name="query"
+					placeholder="Search Wikipedia..."
+					autocomplete="off"
+					required
+				/>
+
+				<button type="submit">Search</button>
+			</form>
+		</div>
+	</body>
 </html>

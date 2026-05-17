@@ -1,14 +1,70 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Search Results</title>
-  </head>
-  <body>
-    <h1>Search Results for "{{ query }}"</h1>
-    <ul>
-      {% for result in results %}
-      <li><a href="{{ baseurl }}{{ result }}">{{ result }}</a></li>
-      {% endfor %}
-    </ul>
-  </body>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Results</title>
+
+		<link
+			rel="stylesheet"
+			href="{{ url_for('static', filename='style.css') }}"
+		/>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<div class="results-container">
+			<a href="/" class="back"> ← New search </a>
+
+			<form method="POST" class="search-top">
+				<input
+					type="text"
+					name="query"
+					value="{{ query }}"
+					autocomplete="off"
+					required
+				/>
+
+				<button type="submit">Search</button>
+			</form>
+
+			{% if results|length > 0 %}
+
+			<div class="results-count">{{ results|length }} results</div>
+
+			{% for result in results %}
+
+			<a href="{{ baseurl }}{{ result }}" target="_blank" class="result-card">
+				<div class="result-title">{{ result.replace('_', ' ') }}</div>
+
+				<div class="result-url">{{ baseurl }}{{ result }}</div>
+			</a>
+
+			{% endfor %} {% else %}
+
+			<div class="empty-state">
+				<div class="empty-icon">⌘</div>
+
+				<h2>No results found</h2>
+
+				<p>
+					Your query may contain rare words, spelling mistakes, or terms not
+					indexed in the corpus.
+				</p>
+
+				<div class="tips">
+					<div>• Try shorter keywords</div>
+					<div>• Remove accents</div>
+					<div>• Use singular words</div>
+					<div>• Search broader topics</div>
+				</div>
+			</div>
+
+			{% endif %}
+		</div>
+	</body>
 </html>
